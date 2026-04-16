@@ -29,6 +29,15 @@ return
 
 ;----------------------------------------------------------------------------
 
+;Navigation with IJKL (Alt + I/J/K/L)
+
+!i::Send {Up}
+!j::Send {Left}
+!k::Send {Down}
+!l::Send {Right}
+
+;----------------------------------------------------------------------------
+
 ;Volume control, Alt+Scroll wheel (and Mbutton)
 
 Alt & WheelUp::Volume_Up
@@ -63,10 +72,10 @@ Return
 customSearch(service := 1)
 {
     static urls := { 0: ""
-                  , 1: "https://google.com/search?q=" 
-                  , 2: "https://www.youtube.com/results?search_query=" }
+                 , 1: "https://www.google.com/search?q="
+                 , 2: "https://www.youtube.com/results?search_query=" }
 
-    InputBox, query, 5609234566923853434695838975569209345,,, 300, 100
+    InputBox, query, 560,,, 300, 100
     if (ErrorLevel)
         return  ; Cancel, close, or empty input
 
@@ -88,7 +97,7 @@ UrlEncode(str) {
 }
 
 F1::customSearch(1) ;
-F2::customSearch(2) ;
++F2::customSearch(2) ;
 
 ;---------------------------------------------------------------------------
 
@@ -96,9 +105,9 @@ F2::customSearch(2) ;
 
 CapsLock::
 send {Alt Down}
-sleep 000 ; Add a small delay to prevent crash
+sleep 050 ; Add a small delay to prevent crash
 send {Tab}
-sleep 000 ; Add a small delay to prevent crash
+sleep 050 ; Add a small delay to prevent crash
 Send {Alt Up}
 return
 
