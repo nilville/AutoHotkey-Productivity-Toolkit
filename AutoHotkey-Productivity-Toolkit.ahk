@@ -75,6 +75,14 @@ Return
 
 ;---------------------------------------------------------------------------
 
+;Open Gemini website with (Alt + g)
+
+!g::
+Run, https://gemini.google.com/
+return
+
+;---------------------------------------------------------------------------
+
 ; search youtube with (F2) and google/duckduckgo with (F1)
 
 customSearch(service := 1)
@@ -120,4 +128,3 @@ Send {Alt Up}
 return
 
 ;---------------------------------------------------------------------------
-
