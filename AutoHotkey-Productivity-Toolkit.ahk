@@ -1,6 +1,7 @@
 	    #NoEnv
 SendMode Input
 SetWorkingDir %A_ScriptDir%
+OnMessage(0x0138, "WM_CTLCOLORSTATIC")
 
 ; ^ = CTRL, # = Win, ! = Alt, + = Shift
 
@@ -83,19 +84,40 @@ return
 
 ;---------------------------------------------------------------------------
 
-; search youtube with (F2) and google/duckduckgo with (F1)
+; search youtube with (F3) and google/duckduckgo with (F1)
 
 customSearch(service := 1)
 {
+    global vQuery, Query, _csHwndEdit, _csHwndBtn1, _csHwndBtn2
     static urls := { 0: ""
                  , 1: "https://www.google.com/search?q="
                  , 2: "https://www.youtube.com/results?search_query=" }
 
-    InputBox, query, 560,,, 300, 100
-    if (ErrorLevel)
-        return  ; Cancel, close, or empty input
+    global _csSearchUrl := urls[service]
 
-    Run, % urls[service] . UrlEncode(query)
+    Gui, New, +LabelcsDlg +AlwaysOnTop, Search
+    Gui, Color, 1e1e1e, 2d2d2d
+    Gui, Font, cWhite s12
+    Gui, Add, Edit, vQuery w400 hwnd_csHwndEdit r1 -E0x200 +Border
+    Gui, Font, cWhite s9
+    Gui, Add, Text, g_csSubmit Center 0x200 hwnd_csHwndBtn1 w80 h24, &Search
+    Gui, Add, Text, g_csCancel Center 0x200 hwnd_csHwndBtn2 x+8 wp h24, Cancel
+    Gui, Add, Button, Default +Hidden g_csSubmit, OK
+    Gui, Show, AutoSize Center
+    return
+
+    _csSubmit:
+    Gui, Submit
+    Gui, Destroy
+    if (Query != "")
+        Run, % _csSearchUrl . UrlEncode(Query)
+    return
+
+    csDlgClose:
+    csDlgEscape:
+    _csCancel:
+    Gui, Destroy
+    return
 }
 
 UrlEncode(str) {
@@ -103,17 +125,47 @@ UrlEncode(str) {
     SetFormat, Integer, Hex
     If RegExMatch(str, "^\w+:/{0,2}", pr)
         StringTrimLeft, str, str, StrLen(pr)
-    StringReplace, str, str, `%, `%25, All
-    Loop
-        If RegExMatch(str, "i)[^\w\.~%/:\[\]-]", char)
-            StringReplace, str, str, %char%, % "%" . SubStr(Asc(char),3), All
-        Else Break
+
+    bufSize := StrPut(str, "UTF-8")
+    VarSetCapacity(buf, bufSize)
+    StrPut(str, &buf, bufSize, "UTF-8")
+
+    result := ""
+    Loop % bufSize - 1
+    {
+        b := NumGet(&buf, A_Index - 1, "UChar")
+        if (b = 0x25)
+            result .= "%25"
+        else if (b = 0x20)
+            result .= "+"
+        else if (b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A) || (b >= 0x30 && b <= 0x39) || b = 0x2D || b = 0x2E || b = 0x5F || b = 0x7E || b = 0x2F || b = 0x3A
+            result .= Chr(b)
+        else
+        {
+            h := b | 0x100
+            StringRight, hx, h, 2
+            result .= "%" . hx
+        }
+    }
+
     SetFormat, Integer, %f%
-    Return pr . str
+    Return pr . result
+}
+
+WM_CTLCOLORSTATIC(wParam, lParam) {
+    global _csHwndBtn1, _csHwndBtn2, _csBtnBrush
+    if (lParam = _csHwndBtn1 || lParam = _csHwndBtn2) {
+        DllCall("SetTextColor", "ptr", wParam, "uint", 0xFFFFFF)
+        DllCall("SetBkColor", "ptr", wParam, "uint", 0x003C3C3C)
+        if !_csBtnBrush
+            _csBtnBrush := DllCall("CreateSolidBrush", "uint", 0x003C3C3C, "ptr")
+        return _csBtnBrush
+    }
+    return 0
 }
 
 F1::customSearch(1) ;
-+F2::customSearch(2) ;
+F3::customSearch(2) ;
 
 ;---------------------------------------------------------------------------
 
